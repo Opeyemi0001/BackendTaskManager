@@ -71,12 +71,13 @@ export const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   // validation 
-  if ( !email || password ) {
+  if ( !email || !password ) {
     // 400 Bad request
     return res.status(400).json({message: "All fields are required"});
   }
 
-  const userExists = await User.findOne({email});
+  // check if user exists
+  const userExists = await User.findOne({ email });
 
   if (!userExists) {
     return res.status(404).json({message: "User not found, sign up!"})
@@ -85,12 +86,12 @@ export const loginUser = asyncHandler(async (req, res) => {
   // check id the password match the hashed password in the database
   const isMatch = await bcrypt.compare(password, userExists.password);
 
-  if (isMatch){
-    return res.status(404).json({message: "Invalid credentials" });
+  if (!isMatch){
+    return res.status(400).json({message: "Invalid credentials" });
   }
 
   // generate token with user id
-  const token = generateToken(userExists_id);
+  const token = generateToken(userExists._id);
 
   if (userExists && isMatch) {
     const {_id, name, email, role, photo, bio, isVerified} = userExists;
@@ -118,4 +119,10 @@ export const loginUser = asyncHandler(async (req, res) => {
   } else {
     res.status(400).json({message: "Invalid email or password"});
   }
+});
+
+// logout user
+export const logoutUser = asyncHandler(async (req, res) => {
+  res.clearCookie("token");
+  res.status(200).json({message: "User logged out"});
 });
