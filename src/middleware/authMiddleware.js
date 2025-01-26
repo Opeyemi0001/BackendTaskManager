@@ -1,34 +1,72 @@
-import asyncHandler from "express-async-handler"
+// import asyncHandler from "express-async-handler";
+// import jwt from "jsonwebtoken";
+// import User from "../models/auth/UserModel.js";
+
+// export const protect = asyncHandler(async (req, res, next) => {
+//   try {
+//     // check if user is logged in
+//     const token = req.cookies.token;
+
+//     if (!token) {
+//       // 401 Unauthorized
+//       res.status(401).json({ message: "Not authorized, please login!" });
+//     }
+
+//     // verify the token
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+//     // get user details from the token ---> exclude password
+//     const user = await User.findById(decoded.id).select("-password");
+
+//     // check if user exists
+//     if (!user) {
+//       return res.status(404).json({ messsage: "User not found!" });
+//     }
+
+//     // set user details in the request object
+//     // so the user becomes available in the request object
+//     req.user = user;
+
+//     // proceed to the next middleware or routes
+//     next();
+//   } catch (error) {
+//     return res.status(401).json({ message: "Not authorized, token failed" });
+//   }
+// });
+
+
+import asyncHandler from "express-async-handler";
 import jwt from "jsonwebtoken";
-import User from "../models/auth/UserModel";
+import User from "../models/auth/UserModel.js";
 
 export const protect = asyncHandler(async (req, res, next) => {
   try {
-    // check if user is logged in
+    // Check if user is logged in
     const token = req.cookies.token;
 
     if (!token) {
       // 401 Unauthorized
-      res.status(401).json({message: "Not authozied, please login!"});
+      return res.status(401).json({ message: "Not authorized, please login!" }); // Use return to prevent further execution
     }
 
-    // verify the token
-    const decode = jwt.verfiy(token, process.env.JWT_SECRET);
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // get user details from the token ---> exclude password
-    const user = await User.findById(decode.id).select("-password");
+    // Get user details from the token (excluding password)
+    const user = await User.findById(decoded.id).select("-password");
 
-    // check if user exists
+    // Check if user exists
     if (!user) {
-      res.status(404).json({messsage: "User not found"});
+      return res.status(404).json({ message: "User not found!" }); // Use return to prevent further execution
     }
 
-    // set user details in the request object
-    // so the user becomes available in the request object
+    // Set user details in the request object
     req.user = user;
 
+    // Proceed to the next middleware or route
     next();
   } catch (error) {
-    res.status(401).json({message: "Not authorized, token tailed"})
+    return res.status(401).json({ message: "Not authorized, token failed" }); // Use return to prevent further execution
   }
 });
+
