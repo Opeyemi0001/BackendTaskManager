@@ -64,7 +64,6 @@ export const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-
 // User login
 export const loginUser = asyncHandler(async (req, res) => {
   // get email and password from req.body
@@ -124,5 +123,11 @@ export const loginUser = asyncHandler(async (req, res) => {
 // logout user
 export const logoutUser = asyncHandler(async (req, res) => {
   res.clearCookie("token");
+
   res.status(200).json({message: "User logged out"});
+});
+
+// get user
+export const getUser = asyncHandler(async (req, res) => {
+  // get user details from the token ---> exclude passowrd
 });
