@@ -1,8 +1,8 @@
 import asyncHandler from "express-async-handler";
 import User from "../../models/auth/UserModel.js";
 import generateToken from "../../helpers/generateToken.js";
-import bcrypt from 'bcrypt';
-
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 export const registerUser = asyncHandler(async (req, res) => {
   // res.send("Register User");
@@ -44,7 +44,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     maxAge: 30 * 24 * 60 * 1000, // 30 days
     sameSite: true,
     secure: true,
-  })
+  });
 
   if (user) {
     const { _id, name, email, role, photo, bio, isVerified } = user;
@@ -70,31 +70,31 @@ export const loginUser = asyncHandler(async (req, res) => {
   // get email and password from req.body
   const { email, password } = req.body;
 
-  // validation 
-  if ( !email || !password ) {
+  // validation
+  if (!email || !password) {
     // 400 Bad request
-    return res.status(400).json({message: "All fields are required"});
+    return res.status(400).json({ message: "All fields are required" });
   }
 
   // check if user exists
   const userExists = await User.findOne({ email });
 
   if (!userExists) {
-    return res.status(404).json({message: "User not found, sign up!"})
+    return res.status(404).json({ message: "User not found, sign up!" });
   }
 
   // check id the password match the hashed password in the database
   const isMatch = await bcrypt.compare(password, userExists.password);
 
-  if (!isMatch){
-    return res.status(400).json({message: "Invalid credentials" });
+  if (!isMatch) {
+    return res.status(400).json({ message: "Invalid credentials" });
   }
 
   // generate token with user id
   const token = generateToken(userExists._id);
 
   if (userExists && isMatch) {
-    const {_id, name, email, role, photo, bio, isVerified} = userExists;
+    const { _id, name, email, role, photo, bio, isVerified } = userExists;
 
     // set the token in the cookie
     res.cookie("token", token, {
@@ -102,7 +102,7 @@ export const loginUser = asyncHandler(async (req, res) => {
       httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       sameSite: true,
-      secure: true, 
+      secure: true,
     });
 
     // send back the user and token in the response to the client
@@ -117,7 +117,7 @@ export const loginUser = asyncHandler(async (req, res) => {
       token,
     });
   } else {
-    res.status(400).json({message: "Invalid email or password"});
+    res.status(400).json({ message: "Invalid email or password" });
   }
 });
 
@@ -125,7 +125,7 @@ export const loginUser = asyncHandler(async (req, res) => {
 export const logoutUser = asyncHandler(async (req, res) => {
   res.clearCookie("token");
 
-  res.status(200).json({message: "User logged out"});
+  res.status(200).json({ message: "User logged out" });
 });
 
 // get user
@@ -137,7 +137,7 @@ export const getUser = asyncHandler(async (req, res) => {
     res.status(200).json(user);
   } else {
     // User not found
-    res.status(404).json({message: "user not found"});
+    res.status(404).json({ message: "user not found" });
   }
 });
 
@@ -149,7 +149,7 @@ export const updateUser = asyncHandler(async (req, res) => {
   if (user) {
     // user properties to update
     const { name, bio, photo } = req.body;
-    // update user properties 
+    // update user properties
     user.name = req.body.name || user.name;
     user.bio = req.body.bio || user.bio;
     user.photo = req.body.photo || user.photo;
@@ -167,6 +167,23 @@ export const updateUser = asyncHandler(async (req, res) => {
     });
   } else {
     // 404 Not found
-    res.status(404).json({message: "user not found"});
+    res.status(404).json({ message: "user not found" });
+  }
+});
+
+// Login status
+export const userLoginStatus = asyncHandler(async (req, res) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    // 401 Unauthorized
+    res.status(401).json({ message: "Not authorized, please Login!" });
+  }
+  // verify the token
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  if (decoded) {
+    res.status(200).json(true);
+  } else {
+    res.status(401).json(false);
   }
 });

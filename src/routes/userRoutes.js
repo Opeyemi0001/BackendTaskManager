@@ -1,7 +1,8 @@
 import express, { Router } from "express";
-import { getUser, loginUser, logoutUser, registerUser, updateUser } from "../controllers/auth/userController.js";
+import { getUser, loginUser, logoutUser, registerUser, updateUser, userLoginStatus } from "../controllers/auth/userController.js";
 import { adminMiddleware, creatorMiddleware, protect } from "../middleware/authMiddleware.js";
 import { deleteUser, getAllUsers } from "../controllers/auth/adminController.js";
+
 
 const router = express.Router();
 
@@ -16,5 +17,8 @@ router.delete("/admin/users/:id", protect, adminMiddleware, deleteUser);
 
 // get all users
 router.get("/admin/users", protect, creatorMiddleware, getAllUsers);
+
+// Login status
+router.get("/login-status", userLoginStatus);
 
 export default router;
