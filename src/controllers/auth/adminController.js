@@ -19,3 +19,16 @@ export const deleteUser = asyncHandle(async (req, res) => {
     res.status(500).json({ message: "Cannot Delete User" });
   }
 });
+
+// get all users
+export const getAllUsers = asyncHandle(async (req, res, next) =>{
+  try {
+    const users = await User.find({});
+  if (!users) {
+    res.status(404).json({ message: "No users found" });
+  }
+  res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({message: "Cannot get users"});
+  }
+});
