@@ -54,7 +54,7 @@ UserSchema.pre("save", async function (next) {
 
   // hash the password ==> bcrypt
   // generate salt
-  const salt = await bcrypt.genSalt(10); // (check out how it workd by reading document of SHA256) 
+  const salt = await bcrypt.genSalt(10); // (check out how it workd by reading document of SHA256)
   // hash the password with the salt
   
   const hashedPassword = await bcrypt.hash(this.password, salt);

@@ -3,6 +3,8 @@ import User from "../../models/auth/UserModel.js";
 import generateToken from "../../helpers/generateToken.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import Token from "../../models/auth/Token.js";
+import crypto from "node:crypto";
 
 export const registerUser = asyncHandler(async (req, res) => {
   // res.send("Register User");
@@ -41,7 +43,7 @@ export const registerUser = asyncHandler(async (req, res) => {
   res.cookie("token", token, {
     path: "/",
     httpOnly: true,
-    maxAge: 30 * 24 * 60 * 1000, // 30 days
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     sameSite: true,
     secure: true,
   });
@@ -173,7 +175,11 @@ export const updateUser = asyncHandler(async (req, res) => {
 
 // Login status
 export const userLoginStatus = asyncHandler(async (req, res) => {
-  const token = req.cookies.token;
+
+  // check if the user isLoggedIn
+  const auth = req.headers.authorization.split(" ");
+  const token = auth[1];
+  // const token = req.cookies?.token;
 
   if (!token) {
     // 401 Unauthorized
@@ -186,4 +192,31 @@ export const userLoginStatus = asyncHandler(async (req, res) => {
   } else {
     res.status(401).json(false);
   }
+});
+
+// email verification
+export const verifyEmail = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  // if user exists
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  // check if user is already verified
+  if (user.isVerified) {
+    return res.status(400).json({ message: "User already verified" });
+  }
+
+  let token = await Token.findOne({ userId: user._id });
+
+  // if token exists --> delete the token
+  if (token) {
+    await token.deleteOne();
+  }
+
+  // create a verification token using the user id ---> crypto
+  const verification = crypto.randomBytes(64).toString("hex") + user._id;
+
+  // hash the verfication token
 });

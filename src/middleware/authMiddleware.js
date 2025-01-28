@@ -1,40 +1,3 @@
-// import asyncHandler from "express-async-handler";
-// import jwt from "jsonwebtoken";
-// import User from "../models/auth/UserModel.js";
-
-// export const protect = asyncHandler(async (req, res, next) => {
-//   try {
-//     // check if user is logged in
-//     const token = req.cookies.token;
-
-//     if (!token) {
-//       // 401 Unauthorized
-//       res.status(401).json({ message: "Not authorized, please login!" });
-//     }
-
-//     // verify the token
-//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-//     // get user details from the token ---> exclude password
-//     const user = await User.findById(decoded.id).select("-password");
-
-//     // check if user exists
-//     if (!user) {
-//       return res.status(404).json({ messsage: "User not found!" });
-//     }
-
-//     // set user details in the request object
-//     // so the user becomes available in the request object
-//     req.user = user;
-
-//     // proceed to the next middleware or routes
-//     next();
-//   } catch (error) {
-//     return res.status(401).json({ message: "Not authorized, token failed" });
-//   }
-// });
-
-
 import asyncHandler from "express-async-handler";
 import jwt from "jsonwebtoken";
 import User from "../models/auth/UserModel.js";
@@ -42,10 +5,13 @@ import User from "../models/auth/UserModel.js";
 export const protect = asyncHandler(async (req, res, next) => {
   try {
     // Check if user is logged in
-    const token = req.cookies.token;
+    const auth = req.headers.authorization.split(" ");
+    const token = auth[1];
+    // console.log("New token", token);
 
     if (!token) {
       // 401 Unauthorized
+
       return res.status(401).json({ message: "Not authorized, please login!" }); // Use return to prevent further execution
     }
 
@@ -70,7 +36,6 @@ export const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
-
 // admin middleware
 export const adminMiddleware = asyncHandler(async (req, res, next) => {
   if (req.user && req.user.role === "admin") {
@@ -79,11 +44,17 @@ export const adminMiddleware = asyncHandler(async (req, res, next) => {
     return;
   }
   // if not admin send 403 Forbidden ---> terminate the request
-  res.status(403).json({message: "Only admins can do this!"});
+  res.status(403).json({ message: "Only admins can do this!" });
 });
 
+// creator middleware
 export const creatorMiddleware = asyncHandler(async (req, res, next) => {
-  if(req.user && req.user.role === "creator" && req.user && req.user.role === "admin") {
+  if (
+    req.user &&
+    req.user.role === "creator" &&
+    req.user &&
+    req.user.role === "admin"
+  ) {
     // if user is creator, move to the next middleware/controller
     next();
     return;
@@ -93,13 +64,12 @@ export const creatorMiddleware = asyncHandler(async (req, res, next) => {
 });
 
 // verified middleware
-export const verifiedMiddleware = asyncHandler(async(re, res, next) => {
+export const verifiedMiddleware = asyncHandler(async (re, res, next) => {
   if (req.user && req.user.isVerified) {
     // if user is verified, move to the next middleware/controller
     next();
     return;
   }
   // if not verified, send 403 forbidden --> terminate the request
-  res.status(403).json({message: "Please verify your email address!"});
-})
-
+  res.status(403).json({ message: "Please verify your email address!" });
+});
