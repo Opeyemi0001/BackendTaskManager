@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import Token from "../../models/auth/Token.js";
 import crypto from "node:crypto";
 import hashToken from "../../helpers/hashToken.js";
+import sendEmail from "../../helpers/sendEmail.js";
 
 export const registerUser = asyncHandler(async (req, res) => {
   // res.send("Register User");
@@ -238,13 +239,26 @@ export const verifyEmail = asyncHandler(async (req, res) => {
   const template = "emailVerification";
   const send_from = process.env.USER_EMAIL;
   const name = user.name;
-  const url = verificationToken;
+  const link = verificationToken;
 
   try {
-    await sendEmail(subject, send_to, reply_to, template, send_from, name, url);
+    await sendEmail(subject, send_to, reply_to, template, send_from, name, link);
     return res.status(200).json({message: "Email sent"});
   } catch (error) {
     console.log("Error sending email: ", error);
     return res.status(500).json({ message: "Email could not be sent" });
   }
+});
+
+export const verifyUser = asyncHandler(async (req, res) => {
+  const { verificationToken } = req.params;
+
+  if(!verificationToken) {
+    return res.status(400).json({message: "Invalid verification token"});
+  }
+  // hash the verification token --> because it was hashed before saving
+  const hashedToken = hashToken(verificationToken);
+
+  // find user with the verification token
+  const userToken = await Token.findOne({ verificationToken: hashedToken })
 });
