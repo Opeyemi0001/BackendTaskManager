@@ -242,8 +242,16 @@ export const verifyEmail = asyncHandler(async (req, res) => {
   const link = verificationToken;
 
   try {
-    await sendEmail(subject, send_to, reply_to, template, send_from, name, link);
-    return res.status(200).json({message: "Email sent"});
+    await sendEmail(
+      subject,
+      send_to,
+      reply_to,
+      template,
+      send_from,
+      name,
+      link
+    );
+    return res.status(200).json({ message: "Email sent" });
   } catch (error) {
     console.log("Error sending email: ", error);
     return res.status(500).json({ message: "Email could not be sent" });
@@ -253,12 +261,35 @@ export const verifyEmail = asyncHandler(async (req, res) => {
 export const verifyUser = asyncHandler(async (req, res) => {
   const { verificationToken } = req.params;
 
-  if(!verificationToken) {
-    return res.status(400).json({message: "Invalid verification token"});
+  if (!verificationToken) {
+    return res.status(400).json({ message: "Invalid verification token" });
   }
   // hash the verification token --> because it was hashed before saving
   const hashedToken = hashToken(verificationToken);
 
   // find user with the verification token
-  const userToken = await Token.findOne({ verificationToken: hashedToken })
+  const userToken = await Token.findOne({
+    verificationToken: hashedToken,
+    // check if the token has not expired
+    expiredAt: { $gt: Date.now() },
+  });
+
+  if (!userToken) {
+    return res
+      .status(400)
+      .json({ message: "Invalid or expired verification token" });
+  }
+
+  // find user with the user id in the token
+  const user = await User.findById(userToken.userId);
+
+  if (user.isVerified) {
+    // 400 Bad request
+    return res.status(400).json({ message: "User is already verified" });
+  }
+
+  // update user to verified
+  user.isVerified = true;
+  await user.save();
+  res.status(200).json({ message: "User verified" });
 });
