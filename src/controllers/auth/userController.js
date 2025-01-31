@@ -351,3 +351,63 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     return res.status(500).json({ message: "Email could not be sent" });
   }
 });
+
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { resetPasswordToken } = req.params;
+  const { password } = req.body;
+
+  if (!password) {
+    return res.status(400).json({ message: "Password is required" });
+  }
+
+  // hash the reset token
+  const hashedToken = hashToken(resetPasswordToken);
+
+  // check if token exists and has not expired
+  const userToken = await Token.findOne({
+    passwordResetToken: hashedToken,
+    // check if the token has not expired
+    expiresAt: { $gt: Date.now() },
+  });
+
+  if (!userToken) {
+    return res.status(400).json({ message: "Invalid or expired rest token" });
+  }
+
+  // find user with the user id in the token
+  const user = await User.findById(userToken.userId);
+
+  // update user password
+  user.password = password;
+  await user.save();
+
+  res.status(200).json({ message: "Paasword reset successfully" });
+});
+
+// change password
+export const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  // find user by id
+  const user = await User.findById(req.user._id);
+
+  // compare current password with the hashed password in the database
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+  if (!isMatch) {
+    return res.status(400).json({ message: "Invalid password" });
+  }
+
+  // reset password
+  if (isMatch) {
+    user.password = newPassword;
+    await user.save();
+    return res.status(200).json({ message: "Password change successfully" });
+  } else {
+    return res.status(400).json({ message: "password could not be changed!" });
+  }
+});
