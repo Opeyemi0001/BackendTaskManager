@@ -1,44 +1,10 @@
-// dotenv.config();
-// const express = require("express");
-// const bodyParser = require("body-parser");
-// const mongoose = require("mongoose");
-// const cors = require("cors");
-// const taskRoutes = require("./src/routes/taskRoutes");
-
-// const app = express();
-// const PORT = process.env.PORT || 5000;
-// const dbUrl = process.env.MONGOdb_URL;
-
-// mongoose
-//   .connect(dbUrl)
-//   .then(() => console.log("Connected to MongoDB"))
-//   .catch((err) => console.error("Error connecting to MongoDB", err));
-
-// // Middleware
-// app.use(cors());
-// app.use(express.json());
-// app.use(express.urlencoded({extended: true }));
-// app.use("/api", taskRoutes);
-// app
-
-// //Routes
-// app.get("/", (req, res) => {
-//   res.send("welcome to the Task Manager API!");
-// });
-
-// // Start Server
-// app.listen(PORT, () => {
-//   console.log(`Server is running on http://localhost:${PORT}`);
-// });
-
-
-
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import connect from "./src/db/connect.js";
 import cookieParser from "cookie-parser";
 import fs from "node:fs";
+import errorHandler from "./src/helpers/errorhandler.js";
 
 dotenv.config();
 
@@ -55,6 +21,9 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// error handler middleware
+app.use(errorHandler);
 
 // routes
 const routeFile = fs.readdirSync("./src/routes");
