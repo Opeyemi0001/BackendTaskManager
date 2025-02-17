@@ -258,7 +258,7 @@ export const verifyEmail = asyncHandler(async (req, res) => {
   }
 });
 
-export const verifyUser = asyncHandler(async (req, res) => {
+export const  verifyUser = asyncHandler(async (req, res) => {
   const { verificationToken } = req.params;
 
   if (!verificationToken) {

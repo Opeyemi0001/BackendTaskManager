@@ -19,13 +19,13 @@ const sendEmail = async (
   link
 ) => {
   const transporter = nodemailer.createTransport({
-    service: "Outlook365",
-    host: "smtp.office365.com",
+    service: "gmail",
+    host: "smtp.gmail.com",
     port: 587,
     secure: false,
     auth: {
-      user: process.env.USER_EMAIL, // Your Outlook email
-      pass: process.env.EMAIL_PASS, // Your Outlook password
+      user: process.env.USER_EMAIL, // Your google email
+      pass: process.env.EMAIL_PASS, // Your google password
     },
     tls: {
       ciphers: "SSLv3",
@@ -33,7 +33,7 @@ const sendEmail = async (
   });
 
   const handlebarsOptions = {
-    ViewEngine: {
+    viewEngine: {
       extName: ".handlebars",
       partialsDir: path.resolve(__dirname, "../views"),
       defaultLayout: false,
@@ -57,7 +57,7 @@ const sendEmail = async (
   };
 
   try {
-    const info = await transporter.sendEmail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
     console.log("Message sent: %s", info.messageId);
     return info;
   } catch (error) {
