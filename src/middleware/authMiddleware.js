@@ -50,10 +50,8 @@ export const adminMiddleware = asyncHandler(async (req, res, next) => {
 // creator middleware
 export const creatorMiddleware = asyncHandler(async (req, res, next) => {
   if (
-    req.user &&
-    req.user.role === "creator" &&
-    req.user &&
-    req.user.role === "admin"
+    (req.user && req.user.role === "creator") || 
+    (req.user && req.user.role === "admin")
   ) {
     // if user is creator, move to the next middleware/controller
     next();
